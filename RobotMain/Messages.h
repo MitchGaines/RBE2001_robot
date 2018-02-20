@@ -45,7 +45,8 @@ public:
 	bool read();
 	void setup();
 	void printMessage();
-
+  void sendRadiationAlert(bool carry_status);
+  
 private:
 	bool stopped;
 };

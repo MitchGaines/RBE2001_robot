@@ -44,6 +44,10 @@ void Messages::sendHeartbeat() {
 	comms.writeMessage(kHeartbeat, 0x0a, 0x00);
 }
 
+void Messages::sendRadiationAlert(bool carry_status) {
+  comms.writeMessage(carry_status, 0x0a, 0x00);  
+}
+
 /**
  * Print message for debugging
  * This method prints the message as a string of hex numbers strictly for debugging
