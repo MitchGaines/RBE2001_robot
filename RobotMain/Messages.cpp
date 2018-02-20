@@ -11,7 +11,7 @@ BTComms comms;
  */
 Messages::Messages() {
 	stopped = false;
-  move_status = 0x00; // 0x00: stopped; 0x01: moving
+  move_status = 0x01; // 0x01: stopped; 0x02: auto
 }
 
 /**
@@ -27,7 +27,7 @@ void Messages::setup() {
  * @returns bool value that is true if the robot should be stopped
  */
 bool Messages::isStopped() {
-	return move_status == 0x00;
+	return move_status == 0x01 || move_status == 0x00;
 }
 
 void Messages::setMoveStatus(unsigned char stat){
@@ -39,11 +39,11 @@ void Messages::setMoveStatus(unsigned char stat){
  * timing can easily be done in the loop() function of your program.
  */
 void Messages::sendHeartbeat() {
-	comms.writeMessage(kHeartbeat, 0x0a, 0x00);
+	comms.writeMessage(kHeartbeat, 0x02, 0x00);
 }
 
 void Messages::sendRadiationAlert(bool carry_status) {
-  comms.writeMessage(carry_status, 0x0a, 0x00);  
+  comms.writeMessage(carry_status, 0x02, 0x00);  
 }
 
 /**
@@ -76,10 +76,10 @@ bool Messages::read() {
 		case kRadiationAlert:
 			break;
 		case kStopMovement:
-      setMoveStatus(0x00);
+      setMoveStatus(0x01);
 			break;
 		case kResumeMovement:
-      setMoveStatus(0x01);
+      setMoveStatus(0x03);
 			break;
 		case kRobotStatus:
 			break;

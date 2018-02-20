@@ -2,10 +2,12 @@
 #include "Messages.h"
 #include "Drive.h"
 
-enum robotStates {STOP, DRIVE};
+enum robotStates {STOP, AUTO};
 uint8_t curr_robot_state = STOP;
 
 Messages msg;
+Drive* base = new Drive(5, 6, 7, 8, 9, 10);
+
 unsigned long heartbeat;
 unsigned int radiation_count_hb;
 unsigned int robot_status;
@@ -24,24 +26,24 @@ void setup() {
 void loop() {
   sendStatus();
   stateMachine();
-  delay(10);
 }
 
 void stateMachine(){
   switch(curr_robot_state){
     case STOP:
-      msg.setMoveStatus(0x00);
+      msg.setMoveStatus(0x01);
       Serial.println("Robot Stopped");
     break;
-    case DRIVE:
-      msg.setMoveStatus(0x01);
-      Serial.println("Robot Driving");
+    case AUTO:
+      msg.setMoveStatus(0x03);
+      base->driveForward();
+      Serial.println("Robot Driving Autonomously");
     break;  
   }
   
   msg.read();
   if(msg.isStopped()) curr_robot_state = STOP;
-  else if (!msg.isStopped()) curr_robot_state = DRIVE;
+  else if (!msg.isStopped()) curr_robot_state = AUTO;
 }
 
 void sendStatus() {
