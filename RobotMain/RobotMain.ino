@@ -10,7 +10,9 @@ unsigned int robot_status;
 bool carrying_spent; // is the fuel rod being carried spent? Default: 0
 
 void setup() {
+  msg.setup();
   carrying_spent = 0;
+  heartbeat = millis();
 }
 
 void loop() {
@@ -24,7 +26,7 @@ void bluetoothComm() {
     heartbeat = millis() + 1000;
     msg.sendHeartbeat();
 
-    int radiation_status = (carrying_spent) ? 0x2C : 0xFF;
+    int radiation_status = 0x2C; //(carrying_spent) ? 0x2C : 0xFF;
     
     if (!radiation_count_hb) msg.sendRadiationAlert(radiation_status);
 
