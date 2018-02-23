@@ -5,8 +5,6 @@ class Drive {
   public:
     Drive(int _l_ln2, int _l_ln1, int _l_enc, int _r_ln2, int _r_ln1, int _r_enc);
     void driveForward();
-
-
     ~Drive();
   private:
     int l_ln2;
