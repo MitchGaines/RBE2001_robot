@@ -1,9 +1,3 @@
-/*
- * Messages.cpp
- *
- *  Created on: Sep 15, 2016
- *      Author: bradmiller
- */
 #include "Arduino.h"
 #include "Messages.h"
 #include "BTComms.h"
@@ -17,6 +11,7 @@ BTComms comms;
  */
 Messages::Messages() {
 	stopped = false;
+  move_status = 0x01; // 0x01: stopped; 0x02: auto
 }
 
 /**
@@ -32,16 +27,23 @@ void Messages::setup() {
  * @returns bool value that is true if the robot should be stopped
  */
 bool Messages::isStopped() {
-	return stopped;
+	return move_status == 0x01 || move_status == 0x00;
 }
 
+void Messages::setMoveStatus(unsigned char stat){
+  move_status = stat;
+}
 /**
  * Send a heartbeat message to the field to let it know that your code is alive
  * This should be called by your robot program periodically, say once per second. This
  * timing can easily be done in the loop() function of your program.
  */
 void Messages::sendHeartbeat() {
-	comms.writeMessage(kHeartbeat, 0x0a, 0x00);
+	comms.writeMessage(kHeartbeat, 0x02, 0x00);
+}
+
+void Messages::sendRadiationAlert(bool carry_status) {
+  comms.writeMessage(carry_status, 0x02, 0x00);  
 }
 
 /**
@@ -74,8 +76,10 @@ bool Messages::read() {
 		case kRadiationAlert:
 			break;
 		case kStopMovement:
+      setMoveStatus(0x01);
 			break;
 		case kResumeMovement:
+      setMoveStatus(0x03);
 			break;
 		case kRobotStatus:
 			break;
