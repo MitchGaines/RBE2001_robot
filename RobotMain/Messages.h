@@ -1,10 +1,3 @@
-/*
- * Messages.h
- *
- *  Created on: Sep 15, 2016
- *      Author: bradmiller
- */
-
 #ifndef MESSAGES_H_
 #define MESSAGES_H_
 
@@ -45,9 +38,16 @@ public:
 	bool read();
 	void setup();
 	void printMessage();
-
+  void sendRadiationAlert(bool carry_status);
 private:
+  void setCurrStorage(unsigned char val);
+  void setCurrSupply(unsigned char val);
+  void setMoveStatus(unsigned char stat);
+    
 	bool stopped;
+  unsigned char move_status;
+  unsigned char storage_availability;
+  unsigned char supply_availability;
 };
 
 #endif /* MESSAGES_H_ */
