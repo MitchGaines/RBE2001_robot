@@ -1,5 +1,4 @@
 #include "QTRSensors.h"
-#include "PID_v1.h"
 #include "Drive.h"
 #include <Arduino.h>
 
@@ -7,6 +6,7 @@ QTRSensorsRC qtrrc((unsigned char[]) {16, 17, 18, 19, 20, 21, 22}, NUM_SENSORS, 
 
 Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_ln1, int _r_inv, int _r_en){
   qtr_setup = false;
+  prev_error = 0;
   
   l_ln2 = _l_ln2;
   l_ln1 = _l_ln1;
@@ -20,19 +20,33 @@ Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_l
   pinMode(l_ln2, OUTPUT);
   pinMode(l_ln1, OUTPUT);
   pinMode(l_inv, OUTPUT);
+  pinMode(l_en, OUTPUT);
   pinMode(r_ln2, OUTPUT);
   pinMode(r_ln1, OUTPUT);
   pinMode(r_inv, OUTPUT);
+  pinMode(r_en, OUTPUT);
+
 }
 
-void Drive::drive(bool right_inv, int right_speed, bool left_inv, int left_speed){
-  driveLeft(left_inv, left_speed);
-  driveRight(right_inv, right_speed);
+void Drive::lineFollow(bool right_inv, int base_right_spd, bool left_inv, int base_left_spd){
+  setupQtr();
+  int error = line_follow_pos - 1500;
+  Serial.print("Error: ");
+  Serial.println(error);
+  float kp = 50;
+  int kd = 0;
+  int motor_speed  = kp * error + kd * (error-prev_error);
+  prev_error = error;
+
+  int left_speed = base_left_spd - motor_speed;
+  int right_speed = base_right_spd + motor_speed;
+  
+  driveLeft(left_inv, constrain(left_speed, 0, 255));
+  driveRight(right_inv, constrain(right_speed, 0, 255));
 }
 
 void Drive::driveLeft(bool inv, int spd){
-  if(inv)digitalWrite(l_inv, HIGH);
-  else digitalWrite(l_inv, LOW);
+  if(inv) digitalWrite(l_inv, LOW);
   analogWrite(l_en, spd);
   //drive left side 
   digitalWrite(l_ln2, LOW);
@@ -40,8 +54,7 @@ void Drive::driveLeft(bool inv, int spd){
 }
 
 void Drive::driveRight(bool inv, int spd){
-  if(inv)digitalWrite(r_inv, HIGH);
-  else digitalWrite(r_inv, LOW);
+  if(inv) digitalWrite(r_inv, LOW);
   analogWrite(r_en, spd);
   //drive right side 
   digitalWrite(r_ln2, HIGH);
@@ -49,8 +62,8 @@ void Drive::driveRight(bool inv, int spd){
 }
 
 void Drive::stopDriving(){
-  digitalWrite(r_inv, LOW);
-  digitalWrite(l_inv, HIGH);
+  analogWrite(r_en, 0);
+  analogWrite(l_en, 0);
   
   //drive left side stop
   digitalWrite(l_ln2, HIGH);
@@ -62,9 +75,8 @@ void Drive::stopDriving(){
 
 
 void Drive::displayQtr(){
-  unsigned int position = qtrrc.readLine(sensorValues);
-  Serial.println(position); // comment this line out if you are using raw values
-
+  line_follow_pos = qtrrc.readLine(sensorValues);
+  Serial.println(line_follow_pos);
   delay(250);
 }
 
