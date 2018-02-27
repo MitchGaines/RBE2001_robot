@@ -12,7 +12,7 @@ enum fourBarStates {DOWN, EXTEND, STOW};
 uint8_t curr_fourbar_state = STOW;
 
 Messages msg;
-Drive* base = new Drive(5, 6, 7, 8, 9, 10);
+Drive* base = new Drive(6, 7, 14, 43, 8, 9, 15, 24);
 
 unsigned long heartbeat;
 unsigned int radiation_count_hb;
@@ -37,11 +37,12 @@ void loop() {
 void robotStateMachine(){
   switch(curr_robot_state){
     case STOP: // don't do anything if in this state
+      base->stopDriving();
       Serial.println("Robot Stopped");
     break;
     case AUTO:
-      base->driveForward();
-      Serial.println("Robot Driving Autonomously");
+      base->drive(false, 200, false, 200);
+      //base->setupQtr();      
     break;  
   }
   

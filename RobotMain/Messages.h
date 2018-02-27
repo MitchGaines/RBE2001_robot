@@ -39,7 +39,6 @@ public:
 	void setup();
 	void printMessage();
   void sendRadiationAlert(bool carry_status);
-  void setMoveStatus(unsigned char stat);
 private:
   void setCurrStorage(unsigned char val);
   void setCurrSupply(unsigned char val);
