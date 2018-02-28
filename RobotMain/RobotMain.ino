@@ -2,26 +2,26 @@
 #include "Messages.h"
 #include "Drive.h"
 
-enum robotStates {STOP, LINE_FOLLOW};
-uint8_t curr_robot_state = LINE_FOLLOW;
+enum robotStates {STOP, LINE_FOLLOW, AT_REACTOR, AT_STORAGE, AT_SUPPLY};
+uint8_t curr_robot_state = STOP;
 
-enum gripperStates {OPEN, CLOSE};
+enum gripperStates {OPEN, CLOSE, GP_NOTHING};
 uint8_t curr_gripper_state;
 
-enum fourBarStates {DOWN, EXTEND, STOW};
+enum fourBarStates {DOWN, EXTEND, STOW, FB_NOTHING};
 uint8_t curr_fourbar_state;
 
-enum atReactorSteps {GRIPPER_OPEN, FOURBAR_DOWN, GRIPPER_CLOSE, FOURBAR_STOW};
+enum atReactorSteps {RT_GRIPPER_OPEN, RT_FOURBAR_DOWN, RT_GRIPPER_CLOSE, RT_FOURBAR_STOW, RT_NOTHING};
 uint8_t curr_reactor_step;
 
-enum atSupplySteps {GRIPPER_OPEN, FOURBAR_EXTEND, GRIPPER_CLOSE, FOURBAR_STOW};
+enum atSupplySteps {SUP_GRIPPER_OPEN, SUP_FOURBAR_EXTEND, SUP_GRIPPER_CLOSE, SUP_FOURBAR_STOW, SUP_NOTHING};
 uint8_t curr_supply_step;
 
-enum atStorageSteps {FOURBAR_EXTEND, GRIPPER_OPEN, FOURBAR_STOW};
+enum atStorageSteps {STOR_FOURBAR_EXTEND, STOR_GRIPPER_OPEN, STOR_FOURBAR_STOW, STOR_NOTHING};
 uint8_t curr_storage_step;
 
 Messages msg;
-Drive* base = new Drive(6, 7, 37, 43, 8, 9, 39, 24);
+Drive* base = new Drive(6, 7, 20, 21, 53, 51, 47, 49);
 
 unsigned long heartbeat;
 unsigned int radiation_count_hb;
@@ -49,19 +49,86 @@ void robotStateMachine(){
       Serial.println("State: STOP");
     break;
     case LINE_FOLLOW:
-      base->lineFollow(true, 255, true, 255); 
+      base->lineFollow(true, 220, true, 220); 
       Serial.println("State: LINE_FOLLOW");
     break;  
     case AT_REACTOR:
-      fourBarStateMachine();
-      
-      
+      switch(curr_reactor_step){
+        case RT_GRIPPER_OPEN:
+          curr_gripper_state = OPEN;
+          gripperStateMachine();
+          curr_reactor_step = RT_FOURBAR_DOWN;
+        break;
+        case RT_FOURBAR_DOWN:
+          curr_fourbar_state = DOWN;
+          fourBarStateMachine();
+          curr_reactor_step = RT_GRIPPER_CLOSE;
+        break;
+        case RT_GRIPPER_CLOSE:
+          curr_gripper_state = CLOSE;
+          gripperStateMachine();
+          curr_reactor_step = RT_FOURBAR_STOW;
+        break;
+        case RT_FOURBAR_STOW:
+          curr_fourbar_state = STOW;
+          fourBarStateMachine();  
+          curr_reactor_step = RT_NOTHING;
+        break;
+        default:
+          //do nothing state
+          curr_fourbar_state = FB_NOTHING;
+          curr_gripper_state = GP_NOTHING; 
+           
+        break;
+      }
     break;
     case AT_SUPPLY:
-
+      switch(curr_reactor_step){
+        case SUP_GRIPPER_OPEN:
+          curr_gripper_state = OPEN;
+          gripperStateMachine();
+          curr_reactor_step = SUP_FOURBAR_EXTEND;
+        break;
+        case SUP_FOURBAR_EXTEND:
+          curr_fourbar_state = EXTEND;
+          fourBarStateMachine();
+          curr_reactor_step = SUP_GRIPPER_CLOSE;
+        break;
+        case SUP_GRIPPER_CLOSE:
+          curr_gripper_state = CLOSE;
+          gripperStateMachine();
+          curr_reactor_step = SUP_FOURBAR_STOW;
+        break;
+        case SUP_FOURBAR_STOW:
+          curr_fourbar_state = STOW;
+          fourBarStateMachine();
+          curr_reactor_step = SUP_NOTHING;
+        break;
+        default:
+          //do nothing state
+          
+        break;
+      }
     break;
-    case AT_STORAGE:
-
+    case AT_STORAGE: //enum atStorageSteps {STOR_FOURBAR_EXTEND, STOR_GRIPPER_OPEN, STOR_FOURBAR_STOW, STOR_NOTHING};
+      switch(curr_storage_step){
+        case STOR_FOURBAR_EXTEND:
+          
+          curr_reactor_step = STOR_GRIPPER_OPEN;
+        break;
+        case STOR_GRIPPER_OPEN:
+          
+          curr_reactor_step = STOR_FOURBAR_STOW;
+        break;
+        case STOR_FOURBAR_STOW:
+            
+          curr_reactor_step = STOR_NOTHING;
+        break;
+        default:
+          //do nothing state
+          
+        break;
+      }
     break;
   }
   
@@ -78,6 +145,9 @@ void fourBarStateMachine(){
       break;
       case STOW:
       break;
+      default:
+
+      break;
     }
 }
 
@@ -86,6 +156,9 @@ void gripperStateMachine(){
     case OPEN:
     break;
     case CLOSE:
+    break;
+    default:
+
     break;
   }
 }
