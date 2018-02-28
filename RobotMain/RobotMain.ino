@@ -154,21 +154,13 @@ void robotStateMachine(){
 void fourBarStateMachine(){
   switch(curr_fourbar_state){
       case DOWN:
-        crankMotor.write(130);
-        if(digitalRead(downStop)){
-          crankMotor.write(90);
-        }
+        crankMotor.write(50);
       break;
       case EXTEND:
         crankMotor.write(130);
-        delay(500);
-        crankMotor.write(90);
       break;
       case STOW:
-        crankMotor.write(50);
-        if(digitalRead(upStop)){
-          crankMotor.write(90);
-        }
+        crankMotor.write(150);
       break;
       default:
 
