@@ -163,7 +163,7 @@ void fourBarStateMachine(){
         crankMotor.write(150);
       break;
       default:
-
+        crankMotor.write(150);
       break;
     }
 }
