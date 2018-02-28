@@ -1,10 +1,10 @@
 #include "QTRSensors.h"
 #include "Drive.h"
 #include <Arduino.h>
-
-QTRSensorsRC qtrrc((unsigned char[]) {16, 17, 18, 19, 20, 21, 22}, NUM_SENSORS, TIMEOUT, EMITTER_PIN);
+#include <Wire.h>
 
 Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_ln1, int _r_inv, int _r_en){
+  Wire.begin();
   qtr_setup = false;
   prev_error = 0;
   
@@ -29,70 +29,81 @@ Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_l
 }
 
 void Drive::lineFollow(bool right_inv, int base_right_spd, bool left_inv, int base_left_spd){
-  setupQtr();
-  int error = line_follow_pos - 1500;
-  Serial.print("Error: ");
-  Serial.println(error);
-  float kp = 50;
-  int kd = 0;
-  int motor_speed  = kp * error + kd * (error-prev_error);
-  prev_error = error;
-
-  int left_speed = base_left_spd - motor_speed;
-  int right_speed = base_right_spd + motor_speed;
+  for(int i = 0; i < NUM_SENSORS; i++){
+    Serial.print(' ');
+    Serial.print(sensor_val[i]);  
+  }
+  Serial.print(" | ");
+  Serial.print(linePosition());
+  float kp = 10;
+  float error = 4.86 - linePosition(); //if less than, increase left. if greater than, increase right
+  
+  int left_speed = base_left_spd - kp*error;
+  int right_speed = base_right_spd + kp*error;
+  Serial.print(" -- error: ");
+  Serial.print(error);
+  
+  
   
   driveLeft(left_inv, constrain(left_speed, 0, 255));
   driveRight(right_inv, constrain(right_speed, 0, 255));
 }
 
 void Drive::driveLeft(bool inv, int spd){
-  if(inv) digitalWrite(l_inv, LOW);
-  analogWrite(l_en, spd);
-  //drive left side 
-  digitalWrite(l_ln2, LOW);
+  if(inv) digitalWrite(l_inv, HIGH);
+  Serial.print(" --- L: ");
+  Serial.print(spd);
+  digitalWrite(l_en, HIGH);
+  analogWrite(l_ln2, spd);
   digitalWrite(l_ln1, LOW);
 }
 
 void Drive::driveRight(bool inv, int spd){
-  if(inv) digitalWrite(r_inv, LOW);
-  analogWrite(r_en, spd);
-  //drive right side 
-  digitalWrite(r_ln2, HIGH);
-  digitalWrite(r_ln1, LOW);  
+  if(inv) digitalWrite(r_inv, HIGH);
+  Serial.print(" | R: ");
+  Serial.println(spd);
+  digitalWrite(r_en, HIGH);
+  digitalWrite(r_ln2, LOW);
+  analogWrite(r_ln1, spd);
 }
 
 void Drive::stopDriving(){
   analogWrite(r_en, 0);
   analogWrite(l_en, 0);
-  
+
+  digitalWrite(l_inv, LOW);
+  digitalWrite(r_inv, LOW);
   //drive left side stop
-  digitalWrite(l_ln2, HIGH);
+  digitalWrite(l_ln2, LOW);
   digitalWrite(l_ln1, LOW);
   //drive right side stop
   digitalWrite(r_ln2, LOW);
   digitalWrite(r_ln1, LOW);
 }
 
-
-void Drive::displayQtr(){
-  line_follow_pos = qtrrc.readLine(sensorValues);
-  Serial.println(line_follow_pos);
-  delay(250);
-}
-
-void Drive::setupQtr(){
-  if(qtr_setup){
-    displayQtr();
-  } else {
-    Serial.println("Calibrating line follower. . .");
-    for (int i = 0; i < 400; i++) {
-      qtrrc.calibrate();       // reads all sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
-    }
-    qtr_setup = true;
-    delay(1000);
-    displayQtr();
+float Drive::linePosition(){
+  setLineRaw();
+  float reading_sum = 0.0;
+  float position_sum = 0.0;
+  for (int i = 0; i < NUM_SENSORS; i++) {
+    reading_sum += sensor_val[i];
+    position_sum += (float)sensor_val[i] * (float)(i+1);
   }
+  
+  return position_sum/reading_sum;
 }
 
+void Drive::setLineRaw(){
+  
+  sensor_val[0] = analogRead(A0);   
+  sensor_val[1] = analogRead(A1);   
+  sensor_val[2] = analogRead(A2);   
+  sensor_val[3] = analogRead(A3);   
+  sensor_val[4] = analogRead(A4);   
+  sensor_val[5] = analogRead(A5);   
+  sensor_val[6] = analogRead(A6);   
+  sensor_val[7] = analogRead(A7);  
+
+}
 
 Drive::~Drive(){}

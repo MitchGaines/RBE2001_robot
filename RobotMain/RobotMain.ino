@@ -21,7 +21,7 @@ enum atStorageSteps {STOR_FOURBAR_EXTEND, STOR_GRIPPER_OPEN, STOR_FOURBAR_STOW, 
 uint8_t curr_storage_step;
 
 Messages msg;
-Drive* base = new Drive(6, 7, 20, 21, 53, 51, 47, 49);
+Drive* base = new Drive(6, 7, 20, 21, 53, 5, 47, 49);
 
 unsigned long heartbeat;
 unsigned int radiation_count_hb;
@@ -49,8 +49,8 @@ void robotStateMachine(){
       Serial.println("State: STOP");
     break;
     case LINE_FOLLOW:
-      base->lineFollow(true, 220, true, 220); 
-      Serial.println("State: LINE_FOLLOW");
+      base->lineFollow(true, 255, true, 255); 
+      //Serial.println("State: LINE_FOLLOW");
     break;  
     case AT_REACTOR:
       switch(curr_reactor_step){

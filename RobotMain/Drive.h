@@ -3,7 +3,7 @@
 
 #define NUM_SENSORS 8
 #define TIMEOUT     2500
-#define EMITTER_PIN QTR_NO_EMITTER_PIN
+#define EMITTER_PIN 39
 
 class Drive {
   public:
@@ -15,7 +15,9 @@ class Drive {
   private:
     void driveLeft(bool inv, int spd);
     void driveRight(bool inv, int spd);
-    void displayQtr();
+    void setLineRaw();
+    float linePosition();
+    float scaler(float x, float in_min, float in_max, float out_min, float out_max);
     int l_ln2;
     int l_ln1; 
     int l_inv;
@@ -26,7 +28,7 @@ class Drive {
     int r_en;
     
     bool qtr_setup;
-    unsigned int sensorValues[NUM_SENSORS];
+    unsigned int sensor_val[NUM_SENSORS];
     unsigned int line_follow_pos;
     int prev_error;
 };
