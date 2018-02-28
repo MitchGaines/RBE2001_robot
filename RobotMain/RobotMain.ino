@@ -1,6 +1,9 @@
+#include <Servo.h>
+
 #include "BTComms.h"
 #include "Messages.h"
 #include "Drive.h"
+
 
 enum robotStates {STOP, LINE_FOLLOW, AT_REACTOR, AT_STORAGE, AT_SUPPLY};
 uint8_t curr_robot_state = STOP;
@@ -27,11 +30,22 @@ unsigned long heartbeat;
 unsigned int radiation_count_hb;
 unsigned int robot_status;
 
+Servo crankMotor;
+Servo gripperMotor;
+int upStop = 37;
+int downStop = 45;
+
 bool carrying_spent; // is the fuel rod being carried spent? Default: 0
 
 void setup() {
   Serial.begin(115200);
   msg.setup();
+  
+  crankMotor.attach(4);
+  gripperMotor.attach(10);
+  pinMode(upStop, INPUT);
+  pinMode(downStop, INPUT);
+  
   carrying_spent = 0;
   heartbeat = millis();
   Serial.println("Starting robot...");
@@ -140,25 +154,36 @@ void robotStateMachine(){
 void fourBarStateMachine(){
   switch(curr_fourbar_state){
       case DOWN:
+        crankMotor.write(130);
+        if(digitalRead(downStop)){
+          crankMotor.write(90);
+        }
       break;
       case EXTEND:
+        crankMotor.write(130);
+        delay(500);
+        crankMotor.write(90);
       break;
       case STOW:
+        crankMotor.write(50);
+        if(digitalRead(upStop)){
+          crankMotor.write(90);
+        }
       break;
       default:
 
       break;
     }
 }
-
 void gripperStateMachine(){
   switch(curr_gripper_state){
     case OPEN:
+      gripperMotor.write(180);
     break;
     case CLOSE:
+      gripperMotor.write(0);
     break;
     default:
-
     break;
   }
 }
