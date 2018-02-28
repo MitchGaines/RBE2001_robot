@@ -170,10 +170,10 @@ void fourBarStateMachine(){
 void gripperStateMachine(){
   switch(curr_gripper_state){
     case OPEN:
-      gripperMotor.write(180);
+      gripperMotor.write(0);
     break;
     case CLOSE:
-      gripperMotor.write(0);
+      gripperMotor.write(180);
     break;
     default:
     break;
