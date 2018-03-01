@@ -11,7 +11,11 @@ BTComms comms;
  */
 Messages::Messages() {
 	stopped = false;
-  move_status = 0x01; // 0x01: stopped; 0x02: auto
+  move_status = 0x01;
+  open_storage = 0x00;
+  open_supply = 0x00;
+  stor_rod = 1;
+  supply_rod = 4;
 }
 
 /**
@@ -22,6 +26,34 @@ void Messages::setup() {
 	comms.setup();
 }
 
+
+int Messages::openStore(){
+  unsigned char stor_rod = ((open_storage << 4) | 0x0F);
+
+  for (int i = 4; i >= 1; i--){
+    if ((stor_rod | 0x7F) == 0x7F) return i;
+    else stor_rod = ((stor_rod << 1) | 0x0F);
+  }
+}
+
+int Messages::openSupply(){
+  unsigned char supply_rod = (open_supply | 0xF0);
+
+  for (int i = 1; i <= 4; i++){
+    if ((supply_rod | 0xFE) == 0xFF) return i;
+    else supply_rod = ((supply_rod >> 1) | 0xF0);
+  }
+}
+
+
+int Messages::getOpenStorage(){
+  return stor_rod;  
+}
+
+
+int Messages::getOpenSupply(){
+  return supply_rod;  
+}
 /**
  * Check if the field is currently in the "stop" state
  * @returns bool value that is true if the robot should be stopped
@@ -32,6 +64,10 @@ bool Messages::isStopped() {
 
 void Messages::setMoveStatus(unsigned char stat){
   move_status = stat;
+}
+
+unsigned char Messages::getMoveStatus(){
+  return move_status;  
 }
 
 void Messages::setCurrSupply(unsigned char val){
