@@ -25,7 +25,7 @@ uint8_t curr_storage_step;
 int current_quitant = 1;
 
 Messages msg;
-Drive* base = new Drive(6, 7, 20, 21, 53, 5, 47, 49);
+Drive* base = new Drive(6, 7, 20, 21, 53, 5, 47, 49, 2, 3);
 
 const int upStop = 37;
 const int downStop = 45;
@@ -35,6 +35,7 @@ unsigned int radiation_count_hb;
 unsigned int robot_status;
 Servo crankMotor;
 Servo gripperMotor;
+
 
 
 bool carrying_spent; // is the fuel rod being carried spent? Default: 0
@@ -47,6 +48,7 @@ void setup() {
   gripperMotor.attach(10);
   pinMode(upStop, INPUT);
   pinMode(downStop, INPUT);
+
   
   carrying_spent = 0;
   heartbeat = millis();
@@ -197,3 +199,6 @@ void sendStatus() {
     radiation_count_hb = (radiation_count_hb + 1) % 4; 
   }
 }
+
+
+
