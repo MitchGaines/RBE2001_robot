@@ -18,6 +18,7 @@ Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_l
   r_en  = _r_en;
   encoder0PinA = _encoder0PinA;
   encoder0PinB = _encoder0PinB;
+  
   encoder0Pos = 0;
   encoder0PinALast = LOW;
   n = LOW;
@@ -158,6 +159,7 @@ void Drive::turnLeft(){
     }
   }
 }
+
 void Drive::turnRight(){
   driveLeft(false,255);
   driveRight(true,255);
