@@ -12,13 +12,13 @@ class Drive {
     void turn180();
     void stopDriving();
     bool lineCrossing();
-    void driveBack();
+    void centerVTC();
     void turnLeft();
     void turnRight();
-    ~Drive();
-  private:
     void driveLeft(bool inv, int spd);
     void driveRight(bool inv, int spd);
+    ~Drive();
+  private:
     void setLineRaw();
     float linePosition();
     float scaler(float x, float in_min, float in_max, float out_min, float out_max);

@@ -107,6 +107,7 @@ bool Drive::lineCrossing(){
     last_high = true;
     return true;
   }
+  return false;
 }
 
 void Drive::setLineRaw(){
@@ -121,7 +122,7 @@ void Drive::setLineRaw(){
   sensor_val[7] = analogRead(A7);  
 
 }
-void Drive::driveBack(){
+void Drive::centerVTC(){
   driveLeft(true,255);
   driveRight(true,255);
   while(encoder0Pos > driveBackValue){
