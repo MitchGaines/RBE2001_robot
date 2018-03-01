@@ -13,6 +13,7 @@ class Drive {
     void stopDriving();
     void driveBack();
     void turnLeft();
+    void turnRight();
     ~Drive();
   private:
     void driveLeft(bool inv, int spd);
@@ -36,6 +37,7 @@ class Drive {
     int n;
     int driveBackValue;
     int turnLeftValue;
+    int turnRightValue;
     
     bool qtr_setup;
     unsigned int sensor_val[NUM_SENSORS];

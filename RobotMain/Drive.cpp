@@ -23,6 +23,7 @@ Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_l
   n = LOW;
   driveBackValue = -220;
   turnLeftValue = -190;
+  turnRightValue = 220;
   
   
   pinMode(l_ln2, OUTPUT);
@@ -144,5 +145,25 @@ void Drive::turnLeft(){
     }
   }
 }
-
+void Drive::turnRight(){
+  driveLeft(false,255);
+  driveRight(true,255);
+  while(encoder0Pos < turnRightValue){
+    n = digitalRead(encoder0PinA);
+    if ((encoder0PinALast == LOW) && (n == HIGH)) {
+      if (digitalRead(encoder0PinB) == LOW) {
+        encoder0Pos--;
+      } else {
+        encoder0Pos++;
+      }
+      //Serial.println (encoder0Pos);
+    
+    }
+    encoder0PinALast = n;
+    if(encoder0Pos == 220){
+      stopDriving();
+      encoder0Pos = 0;
+    }
+  }
+}
 Drive::~Drive(){}
