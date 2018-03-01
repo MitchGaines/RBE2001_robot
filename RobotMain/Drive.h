@@ -9,6 +9,7 @@ class Drive {
   public:
     Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_ln1, int _r_inv, int _r_en, int _encoder0PinA, int _encoder0PinB);
     void lineFollow(bool right_inv, int right_speed, bool left_inv, int left_speed);
+    void lineFollowUntil(bool right_inv, int base_right_spd, bool left_inv, int base_left_spd, int desired_loc, int current_loc);
     void turn180();
     void stopDriving();
     bool lineCrossing();

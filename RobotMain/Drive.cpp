@@ -1,9 +1,7 @@
 #include "Drive.h"
 #include <Arduino.h>
-#include <Wire.h>
 
 Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_ln1, int _r_inv, int _r_en, int _encoder0PinA, int _encoder0PinB){
-  Wire.begin();
   qtr_setup = false;
   prev_error = 0;
   
@@ -48,6 +46,20 @@ void Drive::lineFollow(bool right_inv, int base_right_spd, bool left_inv, int ba
   
   driveLeft(left_inv, constrain(left_speed, 0, 255));
   driveRight(right_inv, constrain(right_speed, 0, 255));
+}
+/**/
+
+void Drive::lineFollowUntil(bool right_inv, int base_right_spd, bool left_inv, int base_left_spd, int desired_loc, int current_loc){
+  
+  lineFollow(right_inv, base_right_spd, left_inv, base_left_spd);
+  
+  if(current_loc == desired_loc && lineCrossing()){
+    turnRight();
+    turnRight();
+  }
+  if(lineCrossing() && current_loc < desired_loc) current_loc++;
+  Serial.print("Current Quitant: ");
+  Serial.println(current_loc);
 }
 
 void Drive::turn180(){
