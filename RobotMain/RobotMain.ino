@@ -3,8 +3,7 @@
 #include "Messages.h"
 #include "Drive.h"
 
-
-enum robotStates {STOP, APPROACH_REACTOR, AT_REACTOR, AT_STORAGE, AT_SUPPLY};
+enum robotStates {STOP, GOTO_REACTOR, GOTO_STORAGE, GOTO_SUPPLY, AT_REACTOR, AT_STORAGE, AT_SUPPLY};
 uint8_t curr_robot_state = STOP;
 
 enum gripperStates {OPEN, CLOSE, GP_NOTHING};
@@ -22,7 +21,8 @@ uint8_t curr_supply_step;
 enum atStorageSteps {STOR_FOURBAR_EXTEND, STOR_GRIPPER_OPEN, STOR_FOURBAR_STOW, STOR_NOTHING};
 uint8_t curr_storage_step;
 
-int current_quitant = 1;
+int starting_quintant = 1;
+int current_quintant = 1;
 
 Messages msg;
 Drive* base = new Drive(6, 7, 20, 21, 53, 5, 47, 49, 2, 3);
@@ -63,15 +63,20 @@ void loop() {
 void robotStateMachine(){
   switch(curr_robot_state){
      case STOP:
+      msg.setMoveStatus(0x01);
       base->stopDriving();
       Serial.println("State: STOP");
     break;
-    case APPROACH_REACTOR:
+    case GOTO_REACTOR:
       base->lineFollow(true, 255, true, 255); 
-      if(base->lineCrossing()) current_quitant++;
-
-      if(current_quitant == 5 && base->lineCrossing()) curr_robot_state = STOP;
-      Serial.println("State: APPROACH_REACTOR");
+      if(current_quintant == 5 && base->lineCrossing()){
+        curr_robot_state = STOP;
+        robotStateMachine();
+      }
+      if(base->lineCrossing() && current_quintant < 5) current_quintant++;
+      Serial.print("Current Quitant: ");
+      Serial.println(current_quintant);
+      //Serial.println("State: APPROACH_REACTOR");
     break; 
     case AT_REACTOR:
       switch(curr_reactor_step){
@@ -155,7 +160,7 @@ void robotStateMachine(){
   
   msg.read();
   if(msg.isStopped()) curr_robot_state = STOP;
-  else curr_robot_state = APPROACH_REACTOR;
+  if(msg.getMoveStatus() == 0x03) curr_robot_state = GOTO_REACTOR;
 }
 
 void fourBarStateMachine(){

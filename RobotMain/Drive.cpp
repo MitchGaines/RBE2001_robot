@@ -24,7 +24,7 @@ Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_l
   driveBackValue = -220;
   turnLeftValue = -190;
   turnRightValue = 220;
-  
+  line_last_check = millis();
   
   pinMode(l_ln2, OUTPUT);
   pinMode(l_ln1, OUTPUT);
@@ -40,7 +40,7 @@ Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_l
 }
 
 void Drive::lineFollow(bool right_inv, int base_right_spd, bool left_inv, int base_left_spd){
-  float kp = 80;
+  float kp = 160;
   float error = 4.86 - linePosition(); //if less than, increase left. if greater than, increase right
   
   int left_speed = base_left_spd + kp*error;
@@ -101,7 +101,7 @@ bool Drive::lineCrossing(){
   for (int i = 0; i < NUM_SENSORS; i++) {
     if(sensor_val[i]<1000) return false;
   }
-  return true;
+  else return false;
 }
 
 void Drive::setLineRaw(){

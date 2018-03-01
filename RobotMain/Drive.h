@@ -39,7 +39,8 @@ class Drive {
     int driveBackValue;
     int turnLeftValue;
     int turnRightValue;
-    
+
+    unsigned long line_last_check;
     bool qtr_setup;
     unsigned int sensor_val[NUM_SENSORS];
     unsigned int line_follow_pos;
