@@ -15,14 +15,15 @@ uint8_t curr_fourbar_state;
 enum atReactorSteps {RT_GRIPPER_OPEN, RT_FOURBAR_DOWN, RT_GRIPPER_CLOSE, RT_FOURBAR_STOW, RT_NOTHING};
 uint8_t curr_reactor_step;
 
-enum atSupplySteps {SUP_GRIPPER_OPEN, SUP_FOURBAR_EXTEND, SUP_GRIPPER_CLOSE, SUP_FOURBAR_STOW, SUP_NOTHING};
+enum atSupplySteps {SUP_GRIPPER_OPEN, SUP_FOURBAR_EXTEND, SUP_GRIPPER_CLOSE, SUP_FOURBAR_STOW, SUP_RETURN, SUP_NOTHING};
 uint8_t curr_supply_step;
 
-enum atStorageSteps {STOR_FOURBAR_EXTEND, STOR_GRIPPER_OPEN, STOR_FOURBAR_STOW, STOR_NOTHING};
+enum atStorageSteps {STOR_FOURBAR_EXTEND, STOR_GRIPPER_OPEN, STOR_FOURBAR_STOW, STOR_RETURN, STOR_NOTHING};
 uint8_t curr_storage_step;
 
 int starting_quintant = 1;
 int current_quintant = 1;
+int desired_quintant;
 
 Messages msg;
 Drive* base = new Drive(6, 7, 20, 21, 53, 5, 47, 49, 2, 3);
@@ -99,6 +100,7 @@ void robotStateMachine(){
           curr_fourbar_state = STOW;
           fourBarStateMachine();  
           curr_reactor_step = RT_NOTHING;
+          //state ends with stowed closed gripper at reactor 
         break;
         default:
           //do nothing state
@@ -108,47 +110,99 @@ void robotStateMachine(){
         break;
       }
     break;
+    case GOTO_SUPPLY:
+      //line follow until hit quintein number
+      base->centerVTC();
+      base->turnLeft();
+      base->driveLeft(false,255);
+      base->driveRight(false,255);
+      if(digitalRead(29)){
+        base->stopDriving();
+        curr_robot_state = AT_SUPPLY;
+        robotStateMachine();
+      }
+      break;
     case AT_SUPPLY:
-      switch(curr_reactor_step){
+      switch(curr_supply_step){
         case SUP_GRIPPER_OPEN:
           curr_gripper_state = OPEN;
           gripperStateMachine();
-          curr_reactor_step = SUP_FOURBAR_EXTEND;
+          curr_supply_step = SUP_FOURBAR_EXTEND;
         break;
         case SUP_FOURBAR_EXTEND:
           curr_fourbar_state = EXTEND;
           fourBarStateMachine();
-          curr_reactor_step = SUP_GRIPPER_CLOSE;
+          curr_supply_step = SUP_GRIPPER_CLOSE;
         break;
         case SUP_GRIPPER_CLOSE:
           curr_gripper_state = CLOSE;
           gripperStateMachine();
-          curr_reactor_step = SUP_FOURBAR_STOW;
+          curr_supply_step = SUP_FOURBAR_STOW;
         break;
         case SUP_FOURBAR_STOW:
           curr_fourbar_state = STOW;
           fourBarStateMachine();
-          curr_reactor_step = SUP_NOTHING;
+          curr_supply_step = SUP_RETURN;
+          //state ends with closed stowed gripper at supply 
         break;
+        case SUP_RETURN:
+          //INSERT LINE FOLLOW 
+          base->centerVTC();
+          if((current_quintant-desired_quintant)<0){
+            base->turnRight();
+          }
+          else{
+            base->turnLeft();
+          }
+          curr_supply_step = SUP_NOTHING;
         default:
           //do nothing state
           
         break;
+
       }
     break;
+    case GOTO_STORAGE:
+      //line follow until you hit quientin number
+      base->centerVTC();
+      base->turnRight();
+      base->driveLeft(false,255);
+      base->driveRight(false,255);
+      if(digitalRead(29)){
+        base->stopDriving();
+        curr_robot_state = AT_STORAGE;
+        robotStateMachine();
+      }
+      break;
     case AT_STORAGE: //enum atStorageSteps {STOR_FOURBAR_EXTEND, STOR_GRIPPER_OPEN, STOR_FOURBAR_STOW, STOR_NOTHING};
       switch(curr_storage_step){
         case STOR_FOURBAR_EXTEND:
-          
-          curr_reactor_step = STOR_GRIPPER_OPEN;
+          curr_fourbar_state = EXTEND;
+          fourBarStateMachine();
+          curr_storage_step = STOR_GRIPPER_OPEN;
         break;
         case STOR_GRIPPER_OPEN:
-          
-          curr_reactor_step = STOR_FOURBAR_STOW;
+          curr_gripper_state = OPEN;
+          gripperStateMachine();
+          curr_storage_step = STOR_FOURBAR_STOW;
         break;
         case STOR_FOURBAR_STOW:
-            
-          curr_reactor_step = STOR_NOTHING;
+          curr_fourbar_state = STOW;
+          fourBarStateMachine();  
+          curr_storage_step = STOR_RETURN;
+          //currently at storage with stowed open gripper 
+        break;
+        case STOR_RETURN:
+          //INSERT LINE CROSSING
+          base->centerVTC();
+          if((current_quintant-desired_quintant)<0){
+            base->turnLeft();
+          }
+          else{
+            base->turnRight();
+          }
+          curr_storage_step = STOR_NOTHING;
+          //state ends with robot at center line with stowed open gripper
         break;
         default:
           //do nothing state

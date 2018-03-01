@@ -101,7 +101,7 @@ bool Drive::lineCrossing(){
   for (int i = 0; i < NUM_SENSORS; i++) {
     if(sensor_val[i]<1000) return false;
   }
-  else return false;
+  return false;
 }
 
 void Drive::setLineRaw(){
@@ -116,7 +116,7 @@ void Drive::setLineRaw(){
   sensor_val[7] = analogRead(A7);  
 
 }
-void Drive::driveBack(){
+void Drive::centerVTC(){
   driveLeft(true,255);
   driveRight(true,255);
   while(encoder0Pos > driveBackValue){
