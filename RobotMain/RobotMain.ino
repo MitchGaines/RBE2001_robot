@@ -1,11 +1,10 @@
 #include <Servo.h>
-
 #include "BTComms.h"
 #include "Messages.h"
 #include "Drive.h"
 
 
-enum robotStates {STOP, LINE_FOLLOW, AT_REACTOR, AT_STORAGE, AT_SUPPLY};
+enum robotStates {STOP, APPROACH_REACTOR, AT_REACTOR, AT_STORAGE, AT_SUPPLY};
 uint8_t curr_robot_state = STOP;
 
 enum gripperStates {OPEN, CLOSE, GP_NOTHING};
@@ -23,17 +22,20 @@ uint8_t curr_supply_step;
 enum atStorageSteps {STOR_FOURBAR_EXTEND, STOR_GRIPPER_OPEN, STOR_FOURBAR_STOW, STOR_NOTHING};
 uint8_t curr_storage_step;
 
+int current_quitant = 1;
+
 Messages msg;
 Drive* base = new Drive(6, 7, 20, 21, 53, 5, 47, 49);
+
+const int upStop = 37;
+const int downStop = 45;
 
 unsigned long heartbeat;
 unsigned int radiation_count_hb;
 unsigned int robot_status;
-
 Servo crankMotor;
 Servo gripperMotor;
-int upStop = 37;
-int downStop = 45;
+
 
 bool carrying_spent; // is the fuel rod being carried spent? Default: 0
 
@@ -62,10 +64,13 @@ void robotStateMachine(){
       base->stopDriving();
       Serial.println("State: STOP");
     break;
-    case LINE_FOLLOW:
+    case APPROACH_REACTOR:
       base->lineFollow(true, 255, true, 255); 
-      //Serial.println("State: LINE_FOLLOW");
-    break;  
+      if(base->lineCrossing()) current_quitant++;
+
+      if(current_quitant == 5 && base->lineCrossing()) curr_robot_state = STOP;
+      Serial.println("State: APPROACH_REACTOR");
+    break; 
     case AT_REACTOR:
       switch(curr_reactor_step){
         case RT_GRIPPER_OPEN:
@@ -148,7 +153,7 @@ void robotStateMachine(){
   
   msg.read();
   if(msg.isStopped()) curr_robot_state = STOP;
-  else if (!msg.isStopped()) curr_robot_state = LINE_FOLLOW;
+  else curr_robot_state = APPROACH_REACTOR;
 }
 
 void fourBarStateMachine(){

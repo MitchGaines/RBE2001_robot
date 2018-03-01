@@ -9,8 +9,9 @@ class Drive {
   public:
     Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_ln1, int _r_inv, int _r_en);
     void lineFollow(bool right_inv, int right_speed, bool left_inv, int left_speed);
-    void setupQtr();
+    void turn180();
     void stopDriving();
+    bool lineCrossing();
     ~Drive();
   private:
     void driveLeft(bool inv, int spd);

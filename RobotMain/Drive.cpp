@@ -29,15 +29,21 @@ Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_l
 }
 
 void Drive::lineFollow(bool right_inv, int base_right_spd, bool left_inv, int base_left_spd){
-  float kp = 40;
+  float kp = 80;
   float error = 4.86 - linePosition(); //if less than, increase left. if greater than, increase right
   
   int left_speed = base_left_spd + kp*error;
   int right_speed = base_right_spd - kp*error;
-  
+
+  if(lineCrossing()) Serial.println("LINE CROSSING!!!!");
   
   driveLeft(left_inv, constrain(left_speed, 0, 255));
   driveRight(right_inv, constrain(right_speed, 0, 255));
+}
+
+void Drive::turn180(){
+  driveLeft(true, 255);
+  driveRight(false, 255);
 }
 
 void Drive::driveLeft(bool inv, int spd){
@@ -78,6 +84,13 @@ float Drive::linePosition(){
   }
   
   return position_sum/reading_sum;
+}
+
+bool Drive::lineCrossing(){
+  for (int i = 0; i < NUM_SENSORS; i++) {
+    if(sensor_val[i]<1000) return false;
+  }
+  return true;
 }
 
 void Drive::setLineRaw(){
