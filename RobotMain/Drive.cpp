@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_ln1, int _r_inv, int _r_en){
+Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_ln1, int _r_inv, int _r_en, int _encoder0PinA, int _encoder0PinB){
   Wire.begin();
   qtr_setup = false;
   prev_error = 0;
@@ -16,7 +16,13 @@ Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_l
   r_ln1 = _r_ln1;
   r_inv = _r_inv;
   r_en  = _r_en;
-    
+  encoder0PinA = _encoder0PinA;
+  encoder0PinB = _encoder0PinB;
+  encoder0Pos = 0;
+  encoder0PinALast = LOW;
+  n = LOW;
+  driveBackValue = -220;
+  
   pinMode(l_ln2, OUTPUT);
   pinMode(l_ln1, OUTPUT);
   pinMode(l_inv, OUTPUT);
@@ -25,6 +31,8 @@ Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_l
   pinMode(r_ln1, OUTPUT);
   pinMode(r_inv, OUTPUT);
   pinMode(r_en, OUTPUT);
+  pinMode (encoder0PinA, INPUT);
+  pinMode (encoder0PinB, INPUT);
 
 }
 
@@ -91,6 +99,27 @@ void Drive::setLineRaw(){
   sensor_val[6] = analogRead(A6);   
   sensor_val[7] = analogRead(A7);  
 
+}
+void Drive::driveBack(){
+  driveLeft(true,255);
+  driveRight(true,255);
+  while(encoder0Pos > driveBackValue){
+    n = digitalRead(encoder0PinA);
+    if ((encoder0PinALast == LOW) && (n == HIGH)) {
+      if (digitalRead(encoder0PinB) == LOW) {
+        encoder0Pos--;
+      } else {
+        encoder0Pos++;
+      }
+      //Serial.println (encoder0Pos);
+    
+    }
+    encoder0PinALast = n;
+    if(encoder0Pos == -220){
+      stopDriving();
+      encoder0Pos = 0;
+    }
+  }
 }
 
 Drive::~Drive(){}

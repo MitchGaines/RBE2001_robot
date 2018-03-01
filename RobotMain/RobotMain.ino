@@ -24,7 +24,7 @@ enum atStorageSteps {STOR_FOURBAR_EXTEND, STOR_GRIPPER_OPEN, STOR_FOURBAR_STOW, 
 uint8_t curr_storage_step;
 
 Messages msg;
-Drive* base = new Drive(6, 7, 20, 21, 53, 5, 47, 49);
+Drive* base = new Drive(6, 7, 20, 21, 53, 5, 47, 49, 2, 3);
 
 unsigned long heartbeat;
 unsigned int radiation_count_hb;
@@ -34,6 +34,7 @@ Servo crankMotor;
 Servo gripperMotor;
 int upStop = 37;
 int downStop = 45;
+
 
 bool carrying_spent; // is the fuel rod being carried spent? Default: 0
 
@@ -45,6 +46,7 @@ void setup() {
   gripperMotor.attach(10);
   pinMode(upStop, INPUT);
   pinMode(downStop, INPUT);
+
   
   carrying_spent = 0;
   heartbeat = millis();
@@ -192,3 +194,6 @@ void sendStatus() {
     radiation_count_hb = (radiation_count_hb + 1) % 4; 
   }
 }
+
+
+
