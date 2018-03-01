@@ -24,7 +24,7 @@ Drive::Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_l
   driveBackValue = -220;
   turnLeftValue = -190;
   turnRightValue = 220;
-  line_last_check = millis();
+  last_high = false;
   
   pinMode(l_ln2, OUTPUT);
   pinMode(l_ln1, OUTPUT);
@@ -45,8 +45,6 @@ void Drive::lineFollow(bool right_inv, int base_right_spd, bool left_inv, int ba
   
   int left_speed = base_left_spd + kp*error;
   int right_speed = base_right_spd - kp*error;
-
-  if(lineCrossing()) Serial.println("LINE CROSSING!!!!");
   
   driveLeft(left_inv, constrain(left_speed, 0, 255));
   driveRight(right_inv, constrain(right_speed, 0, 255));
@@ -99,9 +97,16 @@ float Drive::linePosition(){
 
 bool Drive::lineCrossing(){
   for (int i = 0; i < NUM_SENSORS; i++) {
-    if(sensor_val[i]<1000) return false;
+    if(sensor_val[i]<1000){
+      last_high = false;
+      return false;
+    }
   }
-  else return false;
+  
+  if(!last_high) {
+    last_high = true;
+    return true;
+  }
 }
 
 void Drive::setLineRaw(){
