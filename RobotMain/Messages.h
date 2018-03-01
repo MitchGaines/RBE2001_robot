@@ -39,10 +39,25 @@ public:
 	void setup();
 	void printMessage();
   void sendRadiationAlert(bool carry_status);
-  void setMoveStatus(unsigned char stat);
+  void getMoveStatus();
+  
+  int getOpenSupply();
+  int getOpenStorage();
+  int openSupply();
+  int openStore();
 private:
+  void setCurrStorage(unsigned char val);
+  void setCurrSupply(unsigned char val);
+  void setMoveStatus(unsigned char stat);
+    
 	bool stopped;
   unsigned char move_status;
+  unsigned char storage_availability;
+  unsigned char supply_availability;
+  unsigned char open_storage;
+  unsigned char open_supply;
+  unsigned char stor_rod;
+  unsigned char supply_rod;
 };
 
 #endif /* MESSAGES_H_ */
