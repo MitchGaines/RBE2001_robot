@@ -12,6 +12,7 @@ class Drive {
     void setupQtr();
     void stopDriving();
     void driveBack();
+    void turnLeft();
     ~Drive();
   private:
     void driveLeft(bool inv, int spd);
@@ -34,6 +35,7 @@ class Drive {
     int encoder0PinALast;
     int n;
     int driveBackValue;
+    int turnLeftValue;
     
     bool qtr_setup;
     unsigned int sensor_val[NUM_SENSORS];
