@@ -135,9 +135,12 @@ void Drive::setLineRaw(){
 
 }
 void Drive::centerVTC(){
+  encoder0Pos = 0;
   driveLeft(true,255);
   driveRight(true,255);
   while(encoder0Pos > driveBackValue){
+    Serial.println(encoder0Pos);
+
     n = digitalRead(encoder0PinA);
     if ((encoder0PinALast == LOW) && (n == HIGH)) {
       if (digitalRead(encoder0PinB) == LOW) {
@@ -151,11 +154,12 @@ void Drive::centerVTC(){
     encoder0PinALast = n;
     if(encoder0Pos == -220){
       stopDriving();
-      encoder0Pos = 0;
+      //encoder0Pos = 0;
     }
   }
 }
 void Drive::turnLeft(){
+  encoder0Pos = 0;
   driveLeft(true,255);
   driveRight(false,255);
   while(encoder0Pos > turnLeftValue){
@@ -178,6 +182,7 @@ void Drive::turnLeft(){
 }
 
 void Drive::turnRight(){
+  encoder0Pos = 0;
   driveLeft(false,255);
   driveRight(true,255);
   while(encoder0Pos < turnRightValue){

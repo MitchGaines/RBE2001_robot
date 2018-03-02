@@ -5,7 +5,7 @@
 #include "Drive.h"
 
 enum robotStates {STOP, GOTO_REACTOR, GOTO_STORAGE, GOTO_SUPPLY, AT_REACTOR, AT_STORAGE, AT_SUPPLY};
-uint8_t curr_robot_state = STOP;
+uint8_t curr_robot_state;
 
 int starting_quintant = 5;
 int current_quintant = 5;
@@ -30,6 +30,7 @@ void setup() {
   
   pinMode(upStop, INPUT);
   pinMode(downStop, INPUT);
+  pinMode(13, OUTPUT);
   crankMotor.attach(4);
   gripperMotor.attach(10);
   
@@ -39,6 +40,7 @@ void setup() {
   //define starting state//
   fourbarStow();
   gripperOpen();
+  curr_robot_state = AT_SUPPLY;
 }
 
 void loop() {
@@ -50,7 +52,7 @@ void robotStateMachine(){
   switch(curr_robot_state){
      case STOP:
       msg.setMoveStatus(0x01);
-      //base->stopDriving();
+      base->stopDriving();
       Serial.println("State: STOP");
     break;
     case GOTO_REACTOR:
@@ -72,26 +74,50 @@ void robotStateMachine(){
       gripperClose();
       fourbarStow();
 
+      curr_robot_state = GOTO_SUPPLY;
+      Serial.println("AT_REACTOR");
+      robotStateMachine();
     break;
     case GOTO_SUPPLY:
-      /*
-      //line follow until hit quintein number
-      base->centerVTC();
-      base->turnLeft();
-      base->driveLeft(false,255);
-      base->driveRight(false,255);
-      if(digitalRead(29)){
-        base->stopDriving();
-        curr_robot_state = AT_SUPPLY;
-        robotStateMachine();
-      }*/
+      base->lineFollow(true, 255, true, 255);
+      if(base->lineCrossing()){
+        curr_robot_state = STOP;
+      }
+      robotStateMachine(); 
       break;
     case AT_SUPPLY:
       gripperOpen();
       fourbarExtend();
       gripperClose();
       fourbarStow();
+      curr_robot_state = GOTO_STORAGE; 
+      /*base->driveLeft(true,255);
+      base->driveRight(false,255);
+      delay(1000);
+      base->driveLeft(false,255);
+      base->driveRight(false,255);
+      if(digitalRead(29)){
+        base->stopDriving();
+        curr_robot_state = AT_SUPPLY;
+        robotStateMachine();
+      }
+      //base->centerVTC();
+      /*delay(2000);
+      base->turnLeft();
+      delay(2000);
+      base->driveLeft(false,255);
+      base->driveRight(false,255);
+      if(digitalRead(29)){
+        base->stopDriving();
+        curr_robot_state = AT_SUPPLY;
+        robotStateMachine();
+      }
       /*
+      gripperOpen();
+      fourbarExtend();
+      gripperClose();
+      fourbarStow();
+      
         case SUP_RETURN:
           //INSERT LINE FOLLOW 
           base->centerVTC();
@@ -104,6 +130,11 @@ void robotStateMachine(){
       }*/
     break;
     case GOTO_STORAGE:
+      base->lineFollow(true, 255, true, 255);
+      if(base->lineCrossing()){
+        curr_robot_state = STOP;
+      }
+      robotStateMachine();
       /*
       //line follow until you hit quientin number
       base->centerVTC();
@@ -120,6 +151,8 @@ void robotStateMachine(){
       fourbarExtend();
       gripperOpen();
       fourbarStow();
+      curr_robot_state = GOTO_STORAGE;
+      robotStateMachine();
       //base->storeReturn();
       /*
         case STOR_RETURN:
@@ -138,9 +171,8 @@ void robotStateMachine(){
     break;
   }
   
-  msg.read();
-  if(msg.isStopped()) curr_robot_state = STOP;
-  if(msg.getMoveStatus() == 0x03) curr_robot_state = AT_SUPPLY;
+  //msg.read();
+  //if(msg.isStopped()) curr_robot_state = STOP;
 }
 
 
@@ -161,14 +193,13 @@ void fourbarStow(){
 }
 
 void gripperOpen(){
-  Serial.println("gripper open");
   gripperMotor.write(0);
   delay(1000);
 }
 
 void gripperClose(){
-  Serial.println("gripper close");
   gripperMotor.write(180);
+  digitalWrite(13, HIGH);
   delay(1000);
 }
 
