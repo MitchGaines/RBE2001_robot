@@ -9,17 +9,19 @@ class Drive {
   public:
     Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_ln1, int _r_inv, int _r_en, int _encoder0PinA, int _encoder0PinB);
     void lineFollow(bool right_inv, int right_speed, bool left_inv, int left_speed);
+    void lineFollowUntil(bool right_inv, int base_right_spd, bool left_inv, int base_left_spd, int desired_loc, int current_loc);
     void turn180();
     void stopDriving();
     bool lineCrossing();
-    void driveBack();
+    void centerVTC();
     void turnLeft();
     void turnRight();
-    ~Drive();
-  private:
+    void setLineRaw();
+    void resetMotors();
     void driveLeft(bool inv, int spd);
     void driveRight(bool inv, int spd);
-    void setLineRaw();
+    ~Drive();
+  private:
     float linePosition();
     float scaler(float x, float in_min, float in_max, float out_min, float out_max);
     int l_ln2;
@@ -39,7 +41,8 @@ class Drive {
     int driveBackValue;
     int turnLeftValue;
     int turnRightValue;
-    
+
+    bool last_high;
     bool qtr_setup;
     unsigned int sensor_val[NUM_SENSORS];
     unsigned int line_follow_pos;

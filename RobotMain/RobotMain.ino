@@ -3,189 +3,197 @@
 #include "Messages.h"
 #include "Drive.h"
 
+enum robotStates{STOP, MOVE};
+uint8_t curr_robot_state;
 
-enum robotStates {STOP, APPROACH_REACTOR, AT_REACTOR, AT_STORAGE, AT_SUPPLY};
-uint8_t curr_robot_state = STOP;
+enum robotMoveStates {GOTO_REACTOR, GOTO_STORAGE, GOTO_SUPPLY, AT_REACTOR, AT_STORAGE, AT_SUPPLY};
+uint8_t curr_robot_move_state;
 
-enum gripperStates {OPEN, CLOSE, GP_NOTHING};
-uint8_t curr_gripper_state;
-
-enum fourBarStates {DOWN, EXTEND, STOW, FB_NOTHING};
-uint8_t curr_fourbar_state;
-
-enum atReactorSteps {RT_GRIPPER_OPEN, RT_FOURBAR_DOWN, RT_GRIPPER_CLOSE, RT_FOURBAR_STOW, RT_NOTHING};
-uint8_t curr_reactor_step;
-
-enum atSupplySteps {SUP_GRIPPER_OPEN, SUP_FOURBAR_EXTEND, SUP_GRIPPER_CLOSE, SUP_FOURBAR_STOW, SUP_NOTHING};
-uint8_t curr_supply_step;
-
-enum atStorageSteps {STOR_FOURBAR_EXTEND, STOR_GRIPPER_OPEN, STOR_FOURBAR_STOW, STOR_NOTHING};
-uint8_t curr_storage_step;
-
-int current_quitant = 1;
+int starting_quintant = 5;
+int current_quintant = 5;
+int desired_quintant;
 
 Messages msg;
 Drive* base = new Drive(6, 7, 20, 21, 53, 5, 47, 49, 2, 3);
-
+Servo crankMotor, gripperMotor;
 const int upStop = 37;
 const int downStop = 45;
 
 unsigned long heartbeat;
 unsigned int radiation_count_hb;
 unsigned int robot_status;
-Servo crankMotor;
-Servo gripperMotor;
-
-
-
+unsigned long p_time;
 bool carrying_spent; // is the fuel rod being carried spent? Default: 0
 
 void setup() {
   Serial.begin(115200);
+  Serial.println("Starting robot...");
   msg.setup();
   
-  crankMotor.attach(4);
-  gripperMotor.attach(10);
   pinMode(upStop, INPUT);
   pinMode(downStop, INPUT);
-
+  pinMode(13, OUTPUT);
+  pinMode(29, INPUT_PULLUP);
+  crankMotor.attach(4);
+  gripperMotor.attach(10);
   
   carrying_spent = 0;
   heartbeat = millis();
-  Serial.println("Starting robot...");
+
+  //define starting state//
+  fourbarStow();
+  gripperOpen();
+  curr_robot_state = STOP;
+  curr_robot_move_state = AT_REACTOR;
+  robotStateMachine();
 }
 
 void loop() {
   sendStatus();
-  robotStateMachine();
+  readMsgs();
 }
 
 void robotStateMachine(){
   switch(curr_robot_state){
-     case STOP:
+    case STOP:
+      base->setLineRaw();
+      msg.setMoveStatus(0x01);
       base->stopDriving();
       Serial.println("State: STOP");
     break;
-    case APPROACH_REACTOR:
-      base->lineFollow(true, 255, true, 255); 
-      if(base->lineCrossing()) current_quitant++;
+    case MOVE:
+      robotMoveStateMachine();
+    break;
+  }
+}
 
-      if(current_quitant == 5 && base->lineCrossing()) curr_robot_state = STOP;
-      Serial.println("State: APPROACH_REACTOR");
-    break; 
+void robotMoveStateMachine(){
+  switch(curr_robot_move_state){
     case AT_REACTOR:
-      switch(curr_reactor_step){
-        case RT_GRIPPER_OPEN:
-          curr_gripper_state = OPEN;
-          gripperStateMachine();
-          curr_reactor_step = RT_FOURBAR_DOWN;
-        break;
-        case RT_FOURBAR_DOWN:
-          curr_fourbar_state = DOWN;
-          fourBarStateMachine();
-          curr_reactor_step = RT_GRIPPER_CLOSE;
-        break;
-        case RT_GRIPPER_CLOSE:
-          curr_gripper_state = CLOSE;
-          gripperStateMachine();
-          curr_reactor_step = RT_FOURBAR_STOW;
-        break;
-        case RT_FOURBAR_STOW:
-          curr_fourbar_state = STOW;
-          fourBarStateMachine();  
-          curr_reactor_step = RT_NOTHING;
-        break;
-        default:
-          //do nothing state
-          curr_fourbar_state = FB_NOTHING;
-          curr_gripper_state = GP_NOTHING; 
-           
-        break;
+      Serial.println("AT_REACTOR");
+      curr_robot_move_state = AT_REACTOR;
+      gripperOpen();
+      fourbarDown();
+      gripperClose();
+      fourbarStow();
+    case GOTO_STORAGE:
+      Serial.println("GOTO_STORAGE");
+      curr_robot_move_state = GOTO_STORAGE;
+      while(!base->lineCrossing()) {
+        base->lineFollow(true, 255, true, 255);
       }
-    break;
+      base->stopDriving();
+      base->centerVTC();
+      base->turnLeft();
+      base->stopDriving();
+      while(digitalRead(29)){
+        base->driveLeft(false, 255);
+        base->driveRight(false, 255);
+      }
+      base->stopDriving();
+
+    case AT_STORAGE: 
+      Serial.println("GOTO_STORAGE");
+      curr_robot_move_state = AT_STORAGE;
+      fourbarExtend();
+      gripperOpen();
+      fourbarStow();
+      while(!base->lineCrossing()) {
+        base->lineFollow(true, 255, true, 255);
+      }
+      base->resetMotors();
+      base->centerVTC();
+      base->resetMotors();
+      base->turnRight();
+      base->resetMotors();
+      base->turnRight();
+    case GOTO_SUPPLY:
+      Serial.println("GOTO_SUPPLY");
+      curr_robot_move_state = GOTO_SUPPLY;
+      //base->turnRight();
+      p_time = millis();
+      while(digitalRead(29)){
+        base->driveLeft(false, 255);
+        base->driveRight(false, 255);
+        if(millis() - p_time > 5000){
+          while(!base->lineCrossing()) {
+            base->lineFollow(true, 255, true, 255);
+          }
+          base->resetMotors();
+        }
+      }
+      base->stopDriving();
     case AT_SUPPLY:
-      switch(curr_reactor_step){
-        case SUP_GRIPPER_OPEN:
-          curr_gripper_state = OPEN;
-          gripperStateMachine();
-          curr_reactor_step = SUP_FOURBAR_EXTEND;
-        break;
-        case SUP_FOURBAR_EXTEND:
-          curr_fourbar_state = EXTEND;
-          fourBarStateMachine();
-          curr_reactor_step = SUP_GRIPPER_CLOSE;
-        break;
-        case SUP_GRIPPER_CLOSE:
-          curr_gripper_state = CLOSE;
-          gripperStateMachine();
-          curr_reactor_step = SUP_FOURBAR_STOW;
-        break;
-        case SUP_FOURBAR_STOW:
-          curr_fourbar_state = STOW;
-          fourBarStateMachine();
-          curr_reactor_step = SUP_NOTHING;
-        break;
-        default:
-          //do nothing state
-          
-        break;
+      Serial.println("AT_SUPPLY");
+      curr_robot_move_state = AT_SUPPLY;
+      gripperOpen();
+      fourbarExtend();
+      gripperClose();
+      fourbarStow();
+      while(!base->lineCrossing()) {
+        base->lineFollow(true, 255, true, 255);
       }
-    break;
-    case AT_STORAGE: //enum atStorageSteps {STOR_FOURBAR_EXTEND, STOR_GRIPPER_OPEN, STOR_FOURBAR_STOW, STOR_NOTHING};
-      switch(curr_storage_step){
-        case STOR_FOURBAR_EXTEND:
-          
-          curr_reactor_step = STOR_GRIPPER_OPEN;
-        break;
-        case STOR_GRIPPER_OPEN:
-          
-          curr_reactor_step = STOR_FOURBAR_STOW;
-        break;
-        case STOR_FOURBAR_STOW:
-            
-          curr_reactor_step = STOR_NOTHING;
-        break;
-        default:
-          //do nothing state
-          
-        break;
+      base->resetMotors();
+      base->centerVTC();
+      base->resetMotors();
+      base->turnRight();
+    case GOTO_REACTOR:
+      Serial.println("GOTO_REACTOR");
+      curr_robot_move_state = GOTO_REACTOR;
+      base->resetMotors();
+      while(!base->lineCrossing()) {
+        base->lineFollow(true, 255, true, 255);
       }
+      base->resetMotors();
+      base->turnRight();
+      base->resetMotors();
+      base->turnRight();
     break;
   }
-  
-  msg.read();
-  if(msg.isStopped()) curr_robot_state = STOP;
-  else curr_robot_state = APPROACH_REACTOR;
 }
 
-void fourBarStateMachine(){
-  switch(curr_fourbar_state){
-      case DOWN:
-        crankMotor.write(50);
-      break;
-      case EXTEND:
-        crankMotor.write(130);
-      break;
-      case STOW:
-        crankMotor.write(150);
-      break;
-      default:
-        crankMotor.write(150);
-      break;
-    }
+
+/**ARM CODE***/
+void fourbarDown(){
+  crankMotor.write(50);
+  delay(750);
 }
-void gripperStateMachine(){
-  switch(curr_gripper_state){
-    case OPEN:
-      gripperMotor.write(0);
-    break;
-    case CLOSE:
-      gripperMotor.write(180);
-    break;
-    default:
-    break;
+
+void fourbarExtend(){
+  crankMotor.write(138);
+  delay(750);
+}
+
+void fourbarStow(){
+  crankMotor.write(150);
+  delay(750);
+}
+
+void gripperOpen(){
+  gripperMotor.write(0);
+  delay(750);
+}
+
+void gripperClose(){
+  gripperMotor.write(180);
+  digitalWrite(13, HIGH);
+  delay(750);
+}
+
+
+void readMsgs(){
+  msg.read();
+  if(msg.isStopped()) {
+    curr_robot_state = STOP;
+    robotStateMachine();
+  }
+
+  if(curr_robot_state == STOP && !msg.isStopped()){
+    curr_robot_state = MOVE;  
+    robotStateMachine();
   }
 }
+
 
 void sendStatus() {
   if (millis() > heartbeat) {
