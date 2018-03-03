@@ -40,7 +40,7 @@ public:
 	void printMessage();
   void sendRadiationAlert(bool carry_status);
   unsigned char getMoveStatus();
-  
+  void setMoveStatus(unsigned char stat);
   int getOpenSupply();
   int getOpenStorage();
   int openSupply();
@@ -48,7 +48,7 @@ public:
 private:
   void setCurrStorage(unsigned char val);
   void setCurrSupply(unsigned char val);
-  void setMoveStatus(unsigned char stat);
+  
     
 	bool stopped;
   unsigned char move_status;
