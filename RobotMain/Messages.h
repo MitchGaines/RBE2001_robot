@@ -45,6 +45,7 @@ public:
   int getOpenStorage();
   int openSupply();
   int openStore();
+  void setMoveStatus(unsigned char stat);
 private:
   void setCurrStorage(unsigned char val);
   void setCurrSupply(unsigned char val);

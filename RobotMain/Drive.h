@@ -11,6 +11,10 @@ class Drive {
     Drive(int _l_ln2, int _l_ln1, int _l_inv, int _l_en, int _r_ln2, int _r_ln1, int _r_inv, int _r_en, int _encoder0PinA, int _encoder0PinB);
     void lineFollow(bool right_inv, int right_speed, bool left_inv, int left_speed);
     void lineFollowUntil(bool right_inv, int base_right_spd, bool left_inv, int base_left_spd, int desired_loc, int current_loc);
+<<<<<<< HEAD
+=======
+    void turn180();
+>>>>>>> 5c61b4ed20427ddc13d8b725eedb89de60e512d2
     void stopDriving();
     bool lineCrossing();
     void centerVTC();
@@ -18,7 +22,10 @@ class Drive {
     void turnRight();
     void setLineRaw();
     void resetMotors();
+<<<<<<< HEAD
     void turn180();
+=======
+>>>>>>> 5c61b4ed20427ddc13d8b725eedb89de60e512d2
     void driveLeft(bool inv, int spd);
     void driveRight(bool inv, int spd);
     ~Drive();

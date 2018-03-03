@@ -145,6 +145,7 @@ void robotMoveStateMachine(){
         base->lineFollow(true, 255, true, 255);
       }
       base->resetMotors();
+<<<<<<< HEAD
       base->turn180();
       base->resetMotors();
       base->stopDriving();
@@ -158,6 +159,11 @@ void robotMoveStateMachine(){
       gripperOpen();
       fourbarStow();
       
+=======
+      base->turnRight();
+      base->resetMotors();
+      base->turnRight();
+>>>>>>> 5c61b4ed20427ddc13d8b725eedb89de60e512d2
     break;
   }
 }
