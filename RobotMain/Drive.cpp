@@ -68,14 +68,16 @@ void Drive::turn180(){
 }
 
 void Drive::driveLeft(bool inv, int spd){
-  if(inv) digitalWrite(l_inv, HIGH);
+  if(inv) { digitalWrite(l_inv, HIGH);}
+  else { digitalWrite(l_inv, LOW);}
   digitalWrite(l_en, HIGH);
   analogWrite(l_ln2, spd);
   digitalWrite(l_ln1, LOW);
 }
 
 void Drive::driveRight(bool inv, int spd){
-  if(inv) digitalWrite(r_inv, HIGH);
+  if(inv) { digitalWrite(r_inv, HIGH);}
+  else { digitalWrite(l_inv, LOW);}
   digitalWrite(r_en, HIGH);
   digitalWrite(r_ln2, LOW);
   analogWrite(r_ln1, spd);
@@ -132,60 +134,32 @@ void Drive::setLineRaw(){
   sensor_val[5] = analogRead(A5);   
   sensor_val[6] = analogRead(A6);   
   sensor_val[7] = analogRead(A7);  
-
+/*
+  for(int i = 0; i < 8; i++){
+    Serial.print(sensor_val[i]);
+    Serial.print(" ");  
+  }
+  Serial.println("");
+*/
 }
 void Drive::centerVTC(){
   encoder0Pos = 0;
   driveLeft(true,255);
   driveRight(true,255);
-  while(encoder0Pos > driveBackValue){
-    Serial.println(encoder0Pos);
-
-    n = digitalRead(encoder0PinA);
-    if ((encoder0PinALast == LOW) && (n == HIGH)) {
-      if (digitalRead(encoder0PinB) == LOW) {
-        encoder0Pos--;
-      } else {
-        encoder0Pos++;
-      }
-      //Serial.println (encoder0Pos);
-    
-    }
-    encoder0PinALast = n;
-    if(encoder0Pos == -220){
-      stopDriving();
-      //encoder0Pos = 0;
-    }
-  }
+  delay(1250);
 }
-void Drive::turnLeft(){
-  encoder0Pos = 0;
+
+void Drive::resetMotors(){
   driveLeft(true,255);
-  driveRight(false,255);
-  while(encoder0Pos > turnLeftValue){
-    n = digitalRead(encoder0PinA);
-    if ((encoder0PinALast == LOW) && (n == HIGH)) {
-      if (digitalRead(encoder0PinB) == LOW) {
-        encoder0Pos--;
-      } else {
-        encoder0Pos++;
-      }
-      //Serial.println (encoder0Pos);
-    
-    }
-    encoder0PinALast = n;
-    if(encoder0Pos == -190){
-      stopDriving();
-      encoder0Pos = 0;
-    }
-  }
+  driveRight(true,255);
+  delay(10);
 }
 
 void Drive::turnRight(){
   encoder0Pos = 0;
-  driveLeft(false,255);
-  driveRight(true,255);
-  while(encoder0Pos < turnRightValue){
+  driveLeft(true,255);
+  driveRight(false,255);
+  while(encoder0Pos < 1625){
     n = digitalRead(encoder0PinA);
     if ((encoder0PinALast == LOW) && (n == HIGH)) {
       if (digitalRead(encoder0PinB) == LOW) {
@@ -193,14 +167,36 @@ void Drive::turnRight(){
       } else {
         encoder0Pos++;
       }
-      //Serial.println (encoder0Pos);
+      Serial.println (encoder0Pos);
     
     }
     encoder0PinALast = n;
-    if(encoder0Pos == 220){
+    if(encoder0Pos == 1625){
       stopDriving();
-      encoder0Pos = 0;
     }
   }
 }
+
+void Drive::turnLeft(){
+  encoder0Pos = 0;
+  driveLeft(true,255);
+  driveRight(false,255);
+  while(encoder0Pos < 5175){
+    n = digitalRead(encoder0PinA);
+    if ((encoder0PinALast == LOW) && (n == HIGH)) {
+      if (digitalRead(encoder0PinB) == LOW) {
+        encoder0Pos--;
+      } else {
+        encoder0Pos++;
+      }
+      Serial.println (encoder0Pos);
+    
+    }
+    encoder0PinALast = n;
+    if(encoder0Pos == 5175){
+      stopDriving();
+    }
+  }
+}
+
 Drive::~Drive(){}

@@ -16,11 +16,12 @@ class Drive {
     void centerVTC();
     void turnLeft();
     void turnRight();
+    void setLineRaw();
+    void resetMotors();
     void driveLeft(bool inv, int spd);
     void driveRight(bool inv, int spd);
     ~Drive();
   private:
-    void setLineRaw();
     float linePosition();
     float scaler(float x, float in_min, float in_max, float out_min, float out_max);
     int l_ln2;
